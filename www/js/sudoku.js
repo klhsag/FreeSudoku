@@ -33,11 +33,9 @@ function SudokuNum(num){
 
 class CandidateSet{
     constructor(iterable){
-        console.log("at least...")
         this._inner = new Set()
         for (const num of iterable){
             let u = SudokuNum(num)
-            console.log(u)
             u.dispatch({
                 [NumType]: (val)=>{
                     this._inner.add(val)
@@ -113,5 +111,72 @@ class SudokuGrid{
                 this.content = new SudokuGridContent(AssumeType, numSym)
             }
         })
+    }
+}
+
+class GridBind{
+    constructor(grid, caption = "", connected_grids = []){
+        this.caption = caption
+        if (grid instanceof SudokuGrid){
+            this.grid = grid
+        } else {
+            throw "invalid construct"
+        }
+        this.connects = connected_grids
+    }
+    connect(other){
+        if (other!==this && !this.connects.includes(other)) this.connects.push(other)
+    }
+}
+
+class Sudoku9x9{
+    constructor(initial_union = new MyUnion(Nothing, Nothing)){
+        initial_union.dispatch({
+            [Nothing] : ()=>{
+                this._raw_data = new Array(9).fill(new Array(9).fill(0))
+            }
+        })
+        this._gbs = undefined
+        this._load_data(this._raw_data)
+    }
+    _load_data(data){
+        let gridbinds = new Array(9).fill(null).map(()=>{
+            return new Array(9).fill(null)
+        })
+        for (let i=0; i<9; ++i){
+            for (let j=0; j<9; ++j){
+                const num = data[i][j]
+                const grid = new SudokuGrid(num)
+                gridbinds[i][j] = new GridBind(grid, i+", "+j)
+            }
+        }
+        for (let i=0; i<9; ++i){
+            for (let j=0; j<9; ++j){
+                for (let k=0; k<9; ++k){
+                    gridbinds[i][j].connect(gridbinds[i][k])
+                    gridbinds[i][j].connect(gridbinds[k][j])
+                }
+            }
+        }
+        for (let i=0; i<9; ++i){
+            let sj = i%3
+            let si = i - sj
+            sj *= 3
+            for (let j=0; j<9; ++j){
+                let xj = j%3
+                let xi = (j - xj)/3
+                xi += si
+                xj += sj
+                for (let k=0; k<9; ++k){
+                    let yj = k%3
+                    let yi = (k - yj)/3
+                    yi += si
+                    yj += sj
+                    gridbinds[xi][xj].connect(gridbinds[yi][yj])
+                    gridbinds[yi][yj].connect(gridbinds[xi][xj])
+                }
+            }
+        }
+        this._gbs = gridbinds
     }
 }
