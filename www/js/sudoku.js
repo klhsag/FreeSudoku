@@ -2,10 +2,10 @@
 
 const NumType = Symbol.for("FreeSudoku-Type-ConcreteNumber")
 const EmptyType = Symbol.for("FreeSudoku-Type-Empty")
-const GuessType = Symbol.for("FreeSudoku-Type-Guess")
+const AssumeType = Symbol.for("FreeSudoku-Type-Assume")
 
 // class SudokuGridContent
-const SudokuGridContent = createUnionClass([EmptyType, NumType, GuessType])
+const SudokuGridContent = createUnionClass([EmptyType, NumType, AssumeType])
 
 const NumberSymbol = [ Nothing,
     Symbol.for("FreeSudoku-Number-1"),
@@ -22,7 +22,9 @@ const NumberSymbol = [ Nothing,
 function SudokuNum(num){
     if (num>0 && num<10){
         return new SudokuGridContent(NumType, NumberSymbol[num])
-    } else if (num instanceof NumberSymbol){
+    } else if (NumberSymbol.includes(num) && num!==Nothing){
+        return new SudokuGridContent(NumType, num)
+    } else if (num instanceof SudokuGridContent && num.is(NumType)){
         return num
     } else {
         return throwDefaultError()
@@ -61,14 +63,29 @@ class CandidateSet{
 class SudokuGrid{
     constructor(num){
         this._initial_num = num
+        this.history = []
         if (this._initial_num == 0){
             this.content = new SudokuGridContent(EmptyType, new CandidateSet([]))
         } else if (this._initial_num>0 && this._initial_num<10){
             this.content = SudokuNum(this._initial_num)
         } else {
-            this.content =  throwDefaultError()
+            this.content = throwDefaultError()
         }
     }
+    get content(){
+        let len = this.history.length
+        return this.history[len-1]
+    }
+    set content(val){
+        this.history.push(val)
+    }
+    rollback(){
+        this.history.pop()
+    }
+    //_clearly_call(callback){
+    //    this.rollback()
+    //    callback()
+    //}
     resetCandidates(iterable){
         this.content.dispatch({
             [EmptyType] : ()=>{
@@ -93,7 +110,7 @@ class SudokuGrid{
     assume(numSym){
         this.content.dispatch({
             [EmptyType] : (val)=>{
-                this.content = new SudokuGridContent(GuessType, numSym)
+                this.content = new SudokuGridContent(AssumeType, numSym)
             }
         })
     }
