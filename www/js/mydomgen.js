@@ -1,6 +1,6 @@
 "use strict"
 
-function generateDomString(type, id, class_list, content){
+function generateDomBlock(type, id, class_list, content){
     const block = document.createElement(type)
     block.id = id
     const str_class_inner = class_list.join(' ')
@@ -9,6 +9,6 @@ function generateDomString(type, id, class_list, content){
     return block
 }
 
-function getDivHtml(content="", class_list=[], id=""){
-    return generateDomString("div", id, class_list, content, "")
+function getDivBlock(content="", class_list=[], id=""){
+    return generateDomBlock("div", id, class_list, content, "")
 }
