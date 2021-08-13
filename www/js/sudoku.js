@@ -135,8 +135,8 @@ class SudokuGrid{
 }
 
 class GridBind{
-    constructor(grid, caption = "", connected_grids = []){
-        this.dom = createDivBlock("?", [`sudoku-grid-caption-${caption}`], "")
+    constructor(grid, class_list, caption = "", connected_grids = []){
+        this.dom = createDivBlock("?", class_list, `sudoku-grid-wrapper-${caption}`)
         if (grid instanceof SudokuGrid){
             this.grid = grid
         } else {
@@ -175,7 +175,12 @@ class Sudoku9x9{
         })
         for (let i=0; i<9; ++i){
             for (let j=0; j<9; ++j){
-                gridbinds[i][j] = new GridBind(new SudokuGrid(0), i+""+j)
+                let _class_list = ["sudoku-grid-wrapper"]
+                if (i==0) _class_list.push("sudoku-grid-at-top")
+                if (i==8) _class_list.push("sudoku-grid-at-bottom")
+                if (j==0) _class_list.push("sudoku-grid-at-left")
+                if (j==8) _class_list.push("sudoku-grid-at-right")
+                gridbinds[i][j] = new GridBind(new SudokuGrid(0), _class_list, i+""+j)
             }
         }
         for (let i=0; i<9; ++i){

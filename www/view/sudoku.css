@@ -1,0 +1,31 @@
+.sudoku-playboard{
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    /* place-items: center; */
+    place-content: start;
+    border: 1px solid blue;
+    border-radius: 1em;
+    width: fit-content;
+}
+
+.sudoku-grid-wrapper{
+    border: 1px solid blue;
+    min-width: 4em;
+    min-height: 4em;
+    max-width: min(9vw, 9vh);
+    max-height:  min(9vw, 9vh);
+}
+
+.sudoku-grid-at-top{
+    border-top: 0;
+}
+.sudoku-grid-at-bottom{
+    border-bottom: 0;
+}
+.sudoku-grid-at-left{
+    border-left: 0;
+
+}
+.sudoku-grid-at-right{
+    border-right: 0;
+}

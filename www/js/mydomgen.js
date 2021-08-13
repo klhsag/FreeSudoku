@@ -2,9 +2,9 @@
 
 function generateDomBlock(type, id, class_list, content){
     const block = document.createElement(type)
-    block.id = id
+    if (id) block.id = id
     const str_class_inner = class_list.join(' ')
-    block.className = str_class_inner
+    if (str_class_inner) block.className = str_class_inner
     block.innerHTML = content
     return block
 }
