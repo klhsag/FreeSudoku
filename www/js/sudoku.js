@@ -18,6 +18,11 @@ const NumberSymbol = [ Nothing,
     Symbol.for("FreeSudoku-Number-8"),
     Symbol.for("FreeSudoku-Number-9")]
 
+function sym2num(sym){
+    let s = Symbol.keyFor(sym)
+    return parseInt(s[s.length-1])
+}
+
 
 function SudokuNum(num){
     if (num>0 && num<10){
@@ -70,6 +75,21 @@ class SudokuGrid{
             this.content = throwDefaultError()
         }
     }
+    get dom(){
+        let text = undefined
+        this.content.dispatch({
+            [EmptyType] : (val)=>{
+                text = ""
+            },
+            [NumType] : (val)=>{
+                text = sym2num(val)
+            },
+            [AssumeType]: (val)=>{
+                text = sym2num(val)
+            }
+        })
+        return document.createTextNode(text)
+    }
     get content(){
         let len = this.history.length
         return this.history[len-1]
@@ -116,13 +136,21 @@ class SudokuGrid{
 
 class GridBind{
     constructor(grid, caption = "", connected_grids = []){
-        this.caption = caption
+        this.dom = createDivBlock("?", [`sudoku-grid-caption-${caption}`], "")
         if (grid instanceof SudokuGrid){
             this.grid = grid
         } else {
             throw "invalid construct"
         }
         this.connects = connected_grids
+        this.caption = caption
+    }
+    get grid(){
+        return this._grid
+    }
+    set grid(new_grid){
+        this._grid = new_grid
+        this.dom.replaceChildren(this._grid.dom)
     }
     connect(other){
         if (other!==this && !this.connects.includes(other)) this.connects.push(other)
@@ -137,17 +165,17 @@ class Sudoku9x9{
             }
         })
         this._gbs = undefined
+        this.dom = createDivBlock("", ["sudoku-playboard"], "")
+        this._init_binds()
         this._load_data(this._raw_data)
     }
-    _load_data(data){
+    _init_binds(){
         let gridbinds = new Array(9).fill(null).map(()=>{
             return new Array(9).fill(null)
         })
         for (let i=0; i<9; ++i){
             for (let j=0; j<9; ++j){
-                const num = data[i][j]
-                const grid = new SudokuGrid(num)
-                gridbinds[i][j] = new GridBind(grid, i+", "+j)
+                gridbinds[i][j] = new GridBind(new SudokuGrid(0), i+""+j)
             }
         }
         for (let i=0; i<9; ++i){
@@ -177,6 +205,19 @@ class Sudoku9x9{
                 }
             }
         }
+        for (let i=0; i<9; ++i){
+            for (let j=0; j<9; ++j){
+                this.dom.appendChild(gridbinds[i][j].dom)
+            }
+        }
         this._gbs = gridbinds
+    }
+    _load_data(data){
+        for (let i=0; i<9; ++i){
+            for (let j=0; j<9; ++j){
+                const num = data[i][j]
+                this._gbs[i][j].grid = new SudokuGrid(num)
+            }
+        }
     }
 }

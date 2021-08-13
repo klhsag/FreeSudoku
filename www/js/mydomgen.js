@@ -9,6 +9,6 @@ function generateDomBlock(type, id, class_list, content){
     return block
 }
 
-function getDivBlock(content="", class_list=[], id=""){
+function createDivBlock(content="", class_list=[], id=""){
     return generateDomBlock("div", id, class_list, content, "")
 }
