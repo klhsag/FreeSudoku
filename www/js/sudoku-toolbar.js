@@ -8,7 +8,7 @@ class SudokuToolbar{
         }
         this.dom = createDivBlock("", ["sudoku-toolbar"])
         for (const btnsrc of this._btnsrc){
-            this.dom = createDivBlock(String(sym2num(btnsrc.val)), ["sudoku-toolbar-grid"])
+            this.dom.appendChild(createDivBlock(String(sym2num(btnsrc.val)), ["sudoku-toolbar-grid"]))
         }
     }
 }
