@@ -3,12 +3,13 @@
     grid-template-columns: repeat(9, 1fr);
     /* place-items: center; */
     place-content: start;
-    border: 1px solid blue;
+    border: 2px solid blue;
     border-radius: 1em;
     width: fit-content;
 }
 
 .sudoku-grid-wrapper{
+    padding: 0.2em;
     border: 1px solid blue;
     min-width: 4em;
     min-height: 4em;
