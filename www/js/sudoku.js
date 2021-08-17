@@ -46,13 +46,13 @@ class SudokuGrid{
         let ret = undefined
         this.content.dispatch({
             [EmptyType] : (val)=>{
-                document.createTextNode("")
+                ret = document.createTextNode("")
             },
             [NumType] : (val)=>{
-                document.createTextNode(sym2num(val))
+                ret = document.createTextNode(sym2num(val))
             },
             [AssumeType]: (val)=>{
-                document.createTextNode(sym2num(val))
+                ret = document.createTextNode(sym2num(val))
             }
         })
         return ret
@@ -195,5 +195,11 @@ class Sudoku9x9{
 }
 
 onLoad(()=>{
-    console.log("!!!")
+    console.log("OnLoad start....")
+    const sudoku_game_body = new Sudoku9x9()
+    sudoku_game_body._load_data(sudokumap1)
+    const gb = document.getElementById("sudoku-gamebox")
+    gb.replaceChildren()
+    gb.appendChild(sudoku_game_body.dom)
+    console.log(sudoku_game_body)
 });
