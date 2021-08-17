@@ -193,3 +193,7 @@ class Sudoku9x9{
         }
     }
 }
+
+onLoad(()=>{
+    console.log("!!!")
+});
