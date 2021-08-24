@@ -117,6 +117,9 @@ class SudokuGrid{
         this.content.dispatch({
             [EmptyType] : (val)=>{
                 this.content = new SudokuGridContent(AssumeType, numSym)
+            },
+            [AssumeType] : (val)=>{
+                this.content = new SudokuGridContent(AssumeType, numSym)
             }
         })
         this.refreshDOM()
