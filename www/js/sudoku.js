@@ -41,21 +41,7 @@ class SudokuGrid{
         } else {
             this.content = throwDefaultError()
         }
-    }
-    get dom(){
-        let ret = undefined
-        this.content.dispatch({
-            [EmptyType] : (val)=>{
-                ret = document.createTextNode("")
-            },
-            [NumType] : (val)=>{
-                ret = document.createTextNode(sym2num(val))
-            },
-            [AssumeType]: (val)=>{
-                ret = document.createTextNode(sym2num(val))
-            }
-        })
-        return ret
+        this.dom = this.initial_dom()
     }
     get content(){
         let len = this.history.length
@@ -67,16 +53,49 @@ class SudokuGrid{
     rollback(){
         this.history.pop()
     }
-    //_clearly_call(callback){
-    //    this.rollback()
-    //    callback()
-    //}
+    initial_dom(){
+        let ret = undefined
+        this.content.dispatch({
+            [EmptyType] : (val)=>{
+                let s = ""
+                for (let i of val.values()){
+                    s += i
+                }
+                ret = document.createTextNode(s)
+            },
+            [NumType] : (val)=>{
+                ret = document.createTextNode(sym2num(val))
+            },
+            [AssumeType]: (val)=>{
+                ret = document.createTextNode(sym2num(val))
+            }
+        })
+        return ret
+    }
+    refreshDOM(){
+        this.content.dispatch({
+            [EmptyType] : (val)=>{
+                let s = ""
+                for (let i of val.values()){
+                    s += i
+                }
+                this.dom.textContent = s
+            },
+            [NumType] : (val)=>{
+                this.dom.textContent = sym2num(val)
+            },
+            [AssumeType]: (val)=>{
+                this.dom.textContent = sym2num(val)
+            }
+        })
+    }
     resetCandidates(iterable){
         this.content.dispatch({
             [EmptyType] : ()=>{
                 this.content = new SudokuGridContent(EmptyType, new CandidateSet(iterable))
             }
         })
+        this.refreshDOM()
     }
     addCandidate(numSym){
         this.content.dispatch({
@@ -84,6 +103,7 @@ class SudokuGrid{
                 val.add(numSym)
             }
         })
+        this.refreshDOM()
     }
     delCandidate(numSym){
         this.content.dispatch({
@@ -91,6 +111,7 @@ class SudokuGrid{
                 val.delete(numSym)
             }
         })
+        this.refreshDOM()
     }
     assume(numSym){
         this.content.dispatch({
@@ -98,6 +119,7 @@ class SudokuGrid{
                 this.content = new SudokuGridContent(AssumeType, numSym)
             }
         })
+        this.refreshDOM()
     }
 }
 
@@ -200,6 +222,7 @@ onLoad(()=>{
     sudoku_game_body._load_data(sudokumap1)
     const gb = document.getElementById("sudoku-gamebox")
     gb.replaceChildren()
+    sudoku_game_body._gbs[1][1].grid.addCandidate(5)
     gb.appendChild(sudoku_game_body.dom)
     console.log(sudoku_game_body)
 });
