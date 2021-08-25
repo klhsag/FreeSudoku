@@ -53,6 +53,7 @@ class SudokuGrid{
     }
     rollback(){
         this.history.pop()
+        this.refreshDOM()
     }
     refreshDOM(){
         this.content.dispatch({
