@@ -1,31 +1,33 @@
 "use strict"
 
-// class SudokuGridContent
-const SudokuGridContent = createUnionClass([EmptyType, NumType, AssumeType])
-
 class CandidateSet{
     constructor(iterable){
-        this._inner = new Set()
+        this._inner = [false, false, false, false, false,
+                       false, false, false, false, false]
         for (const num of iterable){
             let u = SudokuNum(num)
             u.dispatch({
                 [NumType]: (val)=>{
-                    this._inner.add(val)
+                    this._inner[val] = true
                 }
             })
         }
     }
-    has(numSym){
-        return this._inner.has(numSym)
+    has(num){
+        return this._inner[num]
     }
-    add(numSym){
-        this._inner.add(numSym)
+    add(num){
+        this._inner[num] = true
     }
-    delete(numSym){
-        this._inner.delete(numSym)
+    delete(num){
+        this._inner[num] = false
     }
     values(){
-        return this._inner.values()
+        let ret = []
+        for (let i=0; i<10; ++i){
+            if (this._inner[i]) ret.push(i)
+        }
+        return ret
     }
 
 }
@@ -33,15 +35,13 @@ class CandidateSet{
 class SudokuGrid{
     constructor(num){
         this._initial_num = num
+        this.dom = document.createTextNode("")  // must initial this.dom before this.content
         this.history = []
         if (this._initial_num == 0){
             this.content = new SudokuGridContent(EmptyType, new CandidateSet([]))
-        } else if (this._initial_num>0 && this._initial_num<10){
-            this.content = SudokuNum(this._initial_num)
         } else {
-            this.content = throwDefaultError()
+            this.content = SudokuNum(this._initial_num)
         }
-        this.dom = this.initial_dom()
     }
     get content(){
         let len = this.history.length
@@ -49,28 +49,10 @@ class SudokuGrid{
     }
     set content(val){
         this.history.push(val)
+        this.refreshDOM()
     }
     rollback(){
         this.history.pop()
-    }
-    initial_dom(){
-        let ret = undefined
-        this.content.dispatch({
-            [EmptyType] : (val)=>{
-                let s = ""
-                for (let i of val.values()){
-                    s += i
-                }
-                ret = document.createTextNode(s)
-            },
-            [NumType] : (val)=>{
-                ret = document.createTextNode(sym2num(val))
-            },
-            [AssumeType]: (val)=>{
-                ret = document.createTextNode(sym2num(val))
-            }
-        })
-        return ret
     }
     refreshDOM(){
         this.content.dispatch({
@@ -82,10 +64,10 @@ class SudokuGrid{
                 this.dom.textContent = s
             },
             [NumType] : (val)=>{
-                this.dom.textContent = sym2num(val)
+                this.dom.textContent = val
             },
             [AssumeType]: (val)=>{
-                this.dom.textContent = sym2num(val)
+                this.dom.textContent = val
             }
         })
     }
@@ -95,34 +77,34 @@ class SudokuGrid{
                 this.content = new SudokuGridContent(EmptyType, new CandidateSet(iterable))
             }
         })
-        this.refreshDOM()
     }
-    addCandidate(numSym){
+    addCandidate(num){
         this.content.dispatch({
             [EmptyType] : (val)=>{
-                val.add(numSym)
+                const new_content = new SudokuGridContent(EmptyType, new CandidateSet(val.values()))
+                new_content.val.add(num)
+                this.content = new_content
             }
         })
-        this.refreshDOM()
     }
-    delCandidate(numSym){
+    delCandidate(num){
         this.content.dispatch({
             [EmptyType] : (val)=>{
-                val.delete(numSym)
+                const new_content = new SudokuGridContent(EmptyType, new CandidateSet(val))
+                new_content.val.delete(num)
+                this.content = new_content
             }
         })
-        this.refreshDOM()
     }
-    assume(numSym){
+    assume(num){
         this.content.dispatch({
-            [EmptyType] : (val)=>{
-                this.content = new SudokuGridContent(AssumeType, numSym)
+            [EmptyType] : ()=>{
+                this.content = new SudokuGridContent(AssumeType, num)
             },
-            [AssumeType] : (val)=>{
-                this.content = new SudokuGridContent(AssumeType, numSym)
+            [AssumeType] : ()=>{
+                this.content = new SudokuGridContent(AssumeType, num)
             }
         })
-        this.refreshDOM()
     }
 }
 
