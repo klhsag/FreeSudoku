@@ -6,7 +6,6 @@ class SudokuToolbarGrid{
         this.valid = valid
         this.dom = bindDiv(this, "", ["sudoku-toolbar-grid"], [])
         this.dom.appendChild(bindDiv(null, "", [], [document.createTextNode(num)]))
-        this.dom.tabIndex = "0"
         this.dom._listeners = []
     }
 }

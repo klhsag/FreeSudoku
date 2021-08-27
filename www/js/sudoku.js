@@ -198,6 +198,13 @@ class Sudoku9x9{
         for (let i=0; i<9; ++i){
             for (let j=0; j<9; ++j){
                 boxes[(i-i%3)+(j-j%3)/3].appendChild(gridbinds[i][j].dom)
+                gridbinds[i][j].dom.addEventListener("click", ()=>{
+                    if (this.activeDOM){
+                        this.activeDOM.classList.remove("sudoku-grid-selected")
+                    }
+                    this.activeDOM = gridbinds[i][j].dom
+                    this.activeDOM.classList.add("sudoku-grid-selected")
+                })
             }
         }
         this._gbs = gridbinds
@@ -217,6 +224,20 @@ class Sudoku9x9{
     }
 }
 
+class SudokuPlaceBar extends SudokuToolbar {
+    constructor(sudoku_board){
+        super()
+        this._board = sudoku_board
+        for (let i=1; i<=9; ++i){
+            this.bindClick(i, ()=>{
+                const selected_dom = sudoku_board.activeDOM
+                const grid = selected_dom._object.grid
+                grid.assume(i)
+            })
+        }
+    }
+}
+
 onLoad(()=>{
     console.log("OnLoad start....")
     const sudoku_game_body = new Sudoku9x9()
@@ -227,7 +248,7 @@ onLoad(()=>{
     sudoku_game_body._gbs[1][4].grid.assume(8)
     gb.appendChild(sudoku_game_body.dom)
     console.log(sudoku_game_body)
-    const bar = new SudokuToolbar()
+    const bar = new SudokuPlaceBar(sudoku_game_body)
     gb.appendChild(bar.dom)
     console.log(bar)
     console.log(gb)

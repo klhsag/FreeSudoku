@@ -8,6 +8,9 @@
 .sudoku-grid-wrapper:focus>.sudoku-placed{
     color: white
 }
+.sudoku-grid-wrapper.sudoku-grid-selected>.sudoku-placed{
+    color: white
+}
 
 .sudoku-grid-wrapper>div{
     margin: auto;
@@ -42,18 +45,23 @@
     text-align: center;
 }
 
-.sudoku-grid-wrapper:focus{
-    background-color: yellowgreen;
-}
 .sudoku-grid-wrapper:hover{
     background-color: greenyellow;
 }
+.sudoku-grid-wrapper:focus{
+    background-color: yellowgreen;
+}
+.sudoku-grid-wrapper.sudoku-grid-selected{
+    background-color: yellowgreen;
+}
+
+/*
 .sudoku-grid-wrapper:hover:focus{
     background-color: yellowgreen;
 }
 .sudoku-grid-wrapper:hover:focus:active{
     background-color: lightgreen;
-}
+}*/
 
 .sudoku-grid-wrapper:nth-child(-n+3){
     border-top-width: 2px;
