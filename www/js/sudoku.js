@@ -229,5 +229,6 @@ onLoad(()=>{
     console.log(sudoku_game_body)
     const bar = new SudokuToolbar()
     gb.appendChild(bar.dom)
+    console.log(bar)
     console.log(gb)
 });

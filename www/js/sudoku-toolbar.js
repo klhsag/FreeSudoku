@@ -7,6 +7,7 @@ class SudokuToolbarGrid{
         this.dom = bindDiv(this, "", ["sudoku-toolbar-grid"], [])
         this.dom.appendChild(bindDiv(null, "", [], [document.createTextNode(num)]))
         this.dom.tabIndex = "0"
+        this.dom._listeners = []
     }
 }
 
@@ -22,4 +23,20 @@ class SudokuToolbar{
         }
     }
 
+    addListener(num, type, listener){
+        /*|    num : 1 .. 9     |*/
+        this._btnsrc[num].dom._listeners.push([type, listener])
+        this._btnsrc[num].dom.addEventListener(type, listener)
+    }
+
+    clearBinds(num){
+        for (let [type, listener] of this._btnsrc[num].dom._listeners){
+            this._btnsrc[num].dom.removeEventListener(type, listener)
+        }
+    }
+
+    bindClick(num, listener){
+        /*|    num : 1 .. 9     |*/
+        this.addListener(num, "click", listener)
+    }
 }
