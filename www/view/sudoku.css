@@ -1,3 +1,7 @@
+.sudoku-base{
+    font-size: xx-large;
+}
+
 .sudoku-playboard{
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -17,12 +21,26 @@
 }
 
 .sudoku-grid-wrapper{
-    padding: 0.2em;
+    padding: calc(50% - 0.5em);
     border: 1px solid blue;
-    min-width: 4em;
-    min-height: 4em;
+    min-width: 4rem;
+    min-height: 4rem;
     max-width: min(9vw, 9vh);
     max-height:  min(9vw, 9vh);
+    text-align: center;
+}
+
+.sudoku-grid-wrapper:focus{
+    background-color: yellowgreen;
+}
+.sudoku-grid-wrapper:hover{
+    background-color: greenyellow;
+}
+.sudoku-grid-wrapper:hover:focus{
+    background-color: yellowgreen;
+}
+.sudoku-grid-wrapper:hover:focus:active{
+    background-color: lightgreen;
 }
 
 .sudoku-grid-wrapper:nth-child(-n+3){
@@ -62,4 +80,26 @@
 }
 .sudoku-grid-at-right{
     border-right: 0;
+}
+
+
+.sudoku-toolbar{
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    /* place-items: center; */
+    place-content: start;
+    border: 2px solid blue;
+    border-radius: 1em;
+    width: fit-content;
+}
+.sudoku-toolbar-grid{
+    padding: 0.2em;
+    border: 1px solid blue;
+    min-width: 4em;
+    min-height: 4em;
+    max-width: min(9vw, 9vh);
+    max-height:  min(9vw, 9vh);
+}
+.sudoku-toolbar-grid{
+    border: 0;
 }

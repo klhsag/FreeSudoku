@@ -5,6 +5,7 @@ class SudokuToolbarGrid{
         this.num = num
         this.valid = valid
         this.dom = createDivBlock(num, ["sudoku-toolbar-grid"])
+        this.dom.tabIndex = "0"
     }
 }
 
@@ -20,6 +21,3 @@ class SudokuToolbar{
         }
     }
 }
-
-const new_toolbar = new SudokuToolbar()
-console.log(new_toolbar)

@@ -111,7 +111,9 @@ class SudokuGrid{
 
 class GridBind{
     constructor(grid, class_list, caption = "", connected_grids = []){
-        this.dom = createDivBlock("?", class_list, `sudoku-grid-wrapper-${caption}`)
+        this.dom = bindDivByText(this, `sudoku-grid-wrapper-${caption}`, class_list, "?")
+        this.dom.tabIndex = "0"                    // allow them to be focus
+        this.dom._object = this
         if (grid instanceof SudokuGrid){
             this.grid = grid
         } else {
@@ -140,7 +142,7 @@ class Sudoku9x9{
             }
         })
         this._gbs = undefined
-        this.dom = createDivBlock("", ["sudoku-playboard"], "")
+        this.dom = bindDivByText(this, "", ["sudoku-playboard"], "")
         this._init_binds()
         this._load_data(this._raw_data)
     }
@@ -187,7 +189,7 @@ class Sudoku9x9{
         }
         const boxes = []
         for (let i=0; i<9; ++i){
-            boxes.push(createDivBlock("", ["sudoku-grid-box"]))
+            boxes.push(bindDivByText(null, "", ["sudoku-grid-box"], ""))
             this.dom.appendChild(boxes[i])
         }
         for (let i=0; i<9; ++i){
@@ -202,6 +204,11 @@ class Sudoku9x9{
             for (let j=0; j<9; ++j){
                 const num = data[i][j]
                 this._gbs[i][j].grid = new SudokuGrid(num)
+                this._gbs[i][j].grid.content.dispatch({
+                    [NumType]: ()=>{
+                        this._gbs[i][j].dom.classList.add("sudoku-base")
+                    }
+                })
             }
         }
     }
@@ -216,4 +223,7 @@ onLoad(()=>{
     sudoku_game_body._gbs[1][1].grid.addCandidate(5)
     gb.appendChild(sudoku_game_body.dom)
     console.log(sudoku_game_body)
+    const bar = new SudokuToolbar()
+    gb.appendChild(bar.dom)
+    console.log(gb)
 });
