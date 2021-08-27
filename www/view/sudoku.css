@@ -1,8 +1,15 @@
 .sudoku-hint{
     font-size: xx-large;
 }
+.sudoku-placed{
+    font-size: xx-large;
+    color: skyblue;
+}
+.sudoku-grid-wrapper:focus>.sudoku-placed{
+    color: white
+}
 
-.sudoku-grid-text{
+.sudoku-grid-wrapper>div{
     margin: auto;
 }
 
@@ -98,13 +105,24 @@
     width: fit-content;
 }
 .sudoku-toolbar-grid{
-    padding: 0.2em;
-    border: 1px solid blue;
+    display: flex;
     min-width: 4em;
     min-height: 4em;
     max-width: min(9vw, 9vh);
     max-height:  min(9vw, 9vh);
 }
-.sudoku-toolbar-grid{
-    border: 0;
+.sudoku-toolbar-grid>div{
+    margin: auto;
+}
+.sudoku-toolbar-grid:focus{
+    background-color: yellowgreen;
+}
+.sudoku-toolbar-grid:hover{
+    background-color: greenyellow;
+}
+.sudoku-toolbar-grid:hover:focus{
+    background-color: yellowgreen;
+}
+.sudoku-toolbar-grid:hover:focus:active{
+    background-color: lightgreen;
 }

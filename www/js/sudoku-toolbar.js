@@ -4,7 +4,8 @@ class SudokuToolbarGrid{
     constructor(num, valid=true){
         this.num = num
         this.valid = valid
-        this.dom = createDivBlock(num, ["sudoku-toolbar-grid"])
+        this.dom = bindDiv(this, "", ["sudoku-toolbar-grid"], [])
+        this.dom.appendChild(bindDiv(null, "", [], [document.createTextNode(num)]))
         this.dom.tabIndex = "0"
     }
 }
@@ -15,9 +16,10 @@ class SudokuToolbar{
         for (let i=1; i<=9; ++i){
             this._btnsrc.push(new SudokuToolbarGrid(i))
         }
-        this.dom = createDivBlock("", ["sudoku-toolbar"])
+        this.dom = bindDiv(this, "", ["sudoku-toolbar"], [])
         for (let i=1; i<=9; ++i){
             this.dom.appendChild(this._btnsrc[i].dom)
         }
     }
+
 }

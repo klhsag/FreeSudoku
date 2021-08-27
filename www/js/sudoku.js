@@ -35,7 +35,7 @@ class CandidateSet{
 class SudokuGrid{
     constructor(num){
         this._initial_num = num
-        this.dom = bindDiv(this, "", ["sudoku-grid-text"], [document.createTextNode("")])  // must initial this.dom before this.content
+        this.dom = bindDiv(this, "", [], [document.createTextNode("")])  // must initial this.dom before this.content
         this.history = []
         if (this._initial_num == 0){
             this.content = new SudokuGridContent(EmptyType, new CandidateSet([]))
@@ -69,6 +69,7 @@ class SudokuGrid{
             },
             [AssumeType]: (val)=>{
                 this.dom.firstChild.textContent = val
+                this.dom.classList.add("sudoku-placed")
             }
         })
     }
@@ -105,6 +106,8 @@ class SudokuGrid{
             [AssumeType] : ()=>{
                 this.content = new SudokuGridContent(AssumeType, num)
             }
+        },()=>{
+            console.log('unable to assume')
         })
     }
 }
@@ -221,6 +224,7 @@ onLoad(()=>{
     const gb = document.getElementById("sudoku-gamebox")
     gb.replaceChildren()
     sudoku_game_body._gbs[1][1].grid.addCandidate(5)
+    sudoku_game_body._gbs[1][4].grid.assume(8)
     gb.appendChild(sudoku_game_body.dom)
     console.log(sudoku_game_body)
     const bar = new SudokuToolbar()
