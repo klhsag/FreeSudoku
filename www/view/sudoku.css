@@ -1,5 +1,9 @@
-.sudoku-base{
+.sudoku-hint{
     font-size: xx-large;
+}
+
+.sudoku-grid-text{
+    margin: auto;
 }
 
 .sudoku-playboard{
@@ -21,7 +25,8 @@
 }
 
 .sudoku-grid-wrapper{
-    padding: calc(50% - 0.5em);
+    display: flex;
+    padding: 0;
     border: 1px solid blue;
     min-width: 4rem;
     min-height: 4rem;

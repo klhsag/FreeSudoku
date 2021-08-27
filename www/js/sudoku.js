@@ -35,7 +35,7 @@ class CandidateSet{
 class SudokuGrid{
     constructor(num){
         this._initial_num = num
-        this.dom = document.createTextNode("")  // must initial this.dom before this.content
+        this.dom = bindDiv(this, "", ["sudoku-grid-text"], [document.createTextNode("")])  // must initial this.dom before this.content
         this.history = []
         if (this._initial_num == 0){
             this.content = new SudokuGridContent(EmptyType, new CandidateSet([]))
@@ -62,13 +62,13 @@ class SudokuGrid{
                 for (let i of val.values()){
                     s += i
                 }
-                this.dom.textContent = s
+                this.dom.firstChild.textContent = s
             },
             [NumType] : (val)=>{
-                this.dom.textContent = val
+                this.dom.firstChild.textContent = val
             },
             [AssumeType]: (val)=>{
-                this.dom.textContent = val
+                this.dom.firstChild.textContent = val
             }
         })
     }
@@ -206,7 +206,7 @@ class Sudoku9x9{
                 this._gbs[i][j].grid = new SudokuGrid(num)
                 this._gbs[i][j].grid.content.dispatch({
                     [NumType]: ()=>{
-                        this._gbs[i][j].dom.classList.add("sudoku-base")
+                        this._gbs[i][j].dom.firstChild.classList.add("sudoku-hint")
                     }
                 })
             }
