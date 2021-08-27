@@ -1,10 +1,18 @@
 .sudoku-playboard{
     display: grid;
-    grid-template-columns: repeat(9, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     /* place-items: center; */
     place-content: start;
-    border: 2px solid blue;
+    border: 3px solid blue;
     border-radius: 1em;
+    width: fit-content;
+}
+
+.sudoku-grid-box{
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    /* place-items: center; */
+    place-content: start;
     width: fit-content;
 }
 
@@ -15,6 +23,31 @@
     min-height: 4em;
     max-width: min(9vw, 9vh);
     max-height:  min(9vw, 9vh);
+}
+
+.sudoku-grid-wrapper:nth-child(-n+3){
+    border-top-width: 2px;
+    border-bottom-color: gray;
+}
+.sudoku-grid-wrapper:nth-child(n+4):nth-child(-n+6){
+    border-top-color: gray;
+    border-bottom-color: gray;
+}
+.sudoku-grid-wrapper:nth-child(n+7){
+    border-top-color: gray;
+    border-bottom-width: 2px;
+}
+.sudoku-grid-wrapper:nth-child(3n+1){
+    border-left-width: 2px;
+    border-right-color: gray;
+}
+.sudoku-grid-wrapper:nth-child(3n+2){
+    border-left-color: gray;
+    border-right-color: gray;
+}
+.sudoku-grid-wrapper:nth-child(3n+3){
+    border-left-color: gray;
+    border-right-width: 2px;
 }
 
 .sudoku-grid-at-top{

@@ -1,14 +1,25 @@
 "use strict"
 
+class SudokuToolbarGrid{
+    constructor(num, valid=true){
+        this.num = num
+        this.valid = valid
+        this.dom = createDivBlock(num, ["sudoku-toolbar-grid"])
+    }
+}
+
 class SudokuToolbar{
     constructor(){
-        this._btnsrc = new Set()
+        this._btnsrc = [null]
         for (let i=1; i<=9; ++i){
-            this._btnsrc.add(new SudokuNum(i))
+            this._btnsrc.push(new SudokuToolbarGrid(i))
         }
         this.dom = createDivBlock("", ["sudoku-toolbar"])
-        for (const btnsrc of this._btnsrc){
-            this.dom.appendChild(createDivBlock(String(sym2num(btnsrc.val)), ["sudoku-toolbar-grid"]))
+        for (let i=1; i<=9; ++i){
+            this.dom.appendChild(this._btnsrc[i].dom)
         }
     }
 }
+
+const new_toolbar = new SudokuToolbar()
+console.log(new_toolbar)

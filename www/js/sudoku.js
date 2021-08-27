@@ -185,9 +185,14 @@ class Sudoku9x9{
                 }
             }
         }
+        const boxes = []
+        for (let i=0; i<9; ++i){
+            boxes.push(createDivBlock("", ["sudoku-grid-box"]))
+            this.dom.appendChild(boxes[i])
+        }
         for (let i=0; i<9; ++i){
             for (let j=0; j<9; ++j){
-                this.dom.appendChild(gridbinds[i][j].dom)
+                boxes[(i-i%3)+(j-j%3)/3].appendChild(gridbinds[i][j].dom)
             }
         }
         this._gbs = gridbinds
