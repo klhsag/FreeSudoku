@@ -127,8 +127,13 @@
 }
 
 
-.sudoku-toolbar{
+.sudoku-candidates-set{
     display: grid;
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.sudoku-toolbar{
+    display: inline-grid;
     grid-template-columns: repeat(3, 1fr);
     /* place-items: center; */
     place-content: start;

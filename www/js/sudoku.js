@@ -58,17 +58,26 @@ class SudokuGrid{
     refreshDOM(){
         this.content.dispatch({
             [EmptyType] : (val)=>{
-                let s = ""
-                for (let i of val.values()){
-                    s += i
+                this.dom.classList.add("sudoku-candidates-set")
+                this.dom.replaceChildren()
+                let vals = val.values()
+                if (vals.length == 0){
+                    this.dom.appendChild(document.createTextNode(""))
                 }
-                this.dom.firstChild.textContent = s
+                for (let i of vals){
+                    const _dom = bindDivByText(null, "", [], i)
+                    this.dom.appendChild(_dom)
+                }
             },
             [NumType] : (val)=>{
-                this.dom.firstChild.textContent = val
+                this.dom.classList.remove("sudoku-candidates-set")
+                this.dom.replaceChildren()
+                this.dom.appendChild(document.createTextNode(val))
             },
             [AssumeType]: (val)=>{
-                this.dom.firstChild.textContent = val
+                this.dom.classList.remove("sudoku-candidates-set")
+                this.dom.replaceChildren()
+                this.dom.appendChild(document.createTextNode(val))
                 this.dom.classList.add("sudoku-placed")
             }
         })
@@ -92,8 +101,21 @@ class SudokuGrid{
     delCandidate(num){
         this.content.dispatch({
             [EmptyType] : (val)=>{
-                const new_content = new SudokuGridContent(EmptyType, new CandidateSet(val))
+                const new_content = new SudokuGridContent(EmptyType, new CandidateSet(val.values()))
                 new_content.val.delete(num)
+                this.content = new_content
+            }
+        })
+    }
+    toggle(num){
+        this.content.dispatch({
+            [EmptyType] : (val)=>{
+                const new_content = new SudokuGridContent(EmptyType, new CandidateSet(val.values()))
+                if (new_content.val.has(num)){
+                    new_content.val.delete(num)
+                }else{
+                    new_content.val.add(num)
+                }
                 this.content = new_content
             }
         })
@@ -279,6 +301,20 @@ class SudokuPlaceBar extends SudokuToolbar {
     }
 }
 
+class SudokuCandidateBar extends SudokuToolbar{
+    constructor(sudoku_board){
+        super()
+        this._board = sudoku_board
+        for (let i=1; i<=9; ++i){
+            this.bindClick(i, ()=>{
+                const selected_dom = sudoku_board.activeDOM
+                const gridbind = selected_dom._object
+                gridbind.grid.toggle(i)
+            })
+        }
+    }
+}
+
 onLoad(()=>{
     console.log("OnLoad start....")
     const sudoku_game_body = new Sudoku9x9()
@@ -289,8 +325,9 @@ onLoad(()=>{
     sudoku_game_body._gbs[1][4].grid.assume(8)
     gb.appendChild(sudoku_game_body.dom)
     console.log(sudoku_game_body)
+    const candy = new SudokuCandidateBar(sudoku_game_body)
     const bar = new SudokuPlaceBar(sudoku_game_body)
+    gb.appendChild(candy.dom)
     gb.appendChild(bar.dom)
-    console.log(bar)
     console.log(gb)
 });
