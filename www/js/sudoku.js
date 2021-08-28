@@ -124,6 +124,7 @@ class GridBind{
         }
         this.connects = connected_grids
         this.caption = caption
+        this.valid = true
     }
     get grid(){
         return this._grid
@@ -134,6 +135,45 @@ class GridBind{
     }
     connect(other){
         if (other!==this && !this.connects.includes(other)) this.connects.push(other)
+    }
+    get valid(){
+        return this._valid
+    }
+    set valid(_is_valid){
+        if (_is_valid){
+            this.dom.classList.remove("sudoku-place-wrong")
+        } else {
+            this.dom.classList.add("sudoku-place-wrong")
+        }
+        this._valid = _is_valid
+    }
+    check_valid(){
+        if (this.grid.content.type!=AssumeType) {
+            this.valid = true
+            return;
+        }
+        let __valid = true
+        const number = this.grid.content.val
+        for (let other of this.connects){
+            other.grid.content.dispatch({
+                [EmptyType]: ()=>{},
+                [NumType]: (val)=>{
+                    if (number==val){
+                        __valid = false;
+                    }
+                },
+                [AssumeType]: (val)=>{
+                    if (number==val){
+                        __valid = false;
+                    }
+                }
+            })
+        }
+        this.valid = __valid
+    }
+    check_connects_valid(){
+        this.check_valid()
+        for (let other of this.connects) other.check_valid()
     }
 }
 
@@ -231,8 +271,9 @@ class SudokuPlaceBar extends SudokuToolbar {
         for (let i=1; i<=9; ++i){
             this.bindClick(i, ()=>{
                 const selected_dom = sudoku_board.activeDOM
-                const grid = selected_dom._object.grid
-                grid.assume(i)
+                const gridbind = selected_dom._object
+                gridbind.grid.assume(i)
+                gridbind.check_connects_valid()
             })
         }
     }
