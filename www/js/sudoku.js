@@ -198,7 +198,7 @@ class Sudoku9x9{
         for (let i=0; i<9; ++i){
             for (let j=0; j<9; ++j){
                 boxes[(i-i%3)+(j-j%3)/3].appendChild(gridbinds[i][j].dom)
-                gridbinds[i][j].dom.addEventListener("click", ()=>{
+                gridbinds[i][j].dom.addEventListener("focusin", ()=>{
                     if (this.activeDOM){
                         this.activeDOM.classList.remove("sudoku-grid-selected")
                     }
