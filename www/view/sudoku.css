@@ -48,6 +48,7 @@
     border: 3px solid blue;
     border-radius: 1em;
     width: fit-content;
+    background-color: rgba(217, 255, 255, 0.8);
 }
 
 .sudoku-grid-box{
@@ -140,6 +141,7 @@
     border: 2px solid blue;
     border-radius: 1em;
     width: fit-content;
+    background-color: rgba(217, 255, 255, 0.8);
 }
 .sudoku-toolbar-grid{
     display: flex;

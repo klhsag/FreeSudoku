@@ -1,0 +1,32 @@
+body{
+    animation: myfirst 20s;
+    animation-iteration-count: infinite;
+    
+    background-image: url("https://cn.bing.com/th?id=OHR.LakeBaikal_ZH-CN1853812638_1920x1080.jpg&rf=LaDigue_1920x1080.jpg&pid=hp");
+    background-image: url("https://cn.bing.com/th?id=OHR.LionRock_ZH-CN1466577021_1920x1080.jpg&rf=LaDigue_1920x1080.jpg&pid=hp");
+    /* preload 预加载图片 */
+
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-size: cover;
+    /*背景完美在窗口上固定填充，一句不能少*/
+}
+
+@keyframes myfirst{
+    0% { /* 贝尔加湖 */
+        background-image: url("https://cn.bing.com/th?id=OHR.LakeBaikal_ZH-CN1853812638_1920x1080.jpg&rf=LaDigue_1920x1080.jpg&pid=hp");
+    }
+    25% {
+        background-image: url("https://cn.bing.com/th?id=OHR.LakeBaikal_ZH-CN1853812638_1920x1080.jpg&rf=LaDigue_1920x1080.jpg&pid=hp");
+    }
+    50% {  /* 狮子岩 */
+        background-image: url("https://cn.bing.com/th?id=OHR.LionRock_ZH-CN1466577021_1920x1080.jpg&rf=LaDigue_1920x1080.jpg&pid=hp");
+    }
+    75% {
+        background-image: url("https://cn.bing.com/th?id=OHR.LionRock_ZH-CN1466577021_1920x1080.jpg&rf=LaDigue_1920x1080.jpg&pid=hp");
+    }
+    100% {
+        background-image: url("https://cn.bing.com/th?id=OHR.LakeBaikal_ZH-CN1853812638_1920x1080.jpg&rf=LaDigue_1920x1080.jpg&pid=hp");
+    }
+}

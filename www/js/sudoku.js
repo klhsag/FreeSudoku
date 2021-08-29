@@ -284,18 +284,35 @@ class Sudoku9x9{
             }
         }
     }
+    completed(){
+        let flag = true
+        for (let i=0; i<9; ++i){
+            for (let j=0; j<9; ++j){
+                if (!this._gbs[i][j].valid || this._gbs[i][j].grid.content.is(EmptyType)){
+                    flag = false
+                    break
+                }
+            }
+        }
+        return (flag)
+    }
+
+
 }
 
 class SudokuPlaceBar extends SudokuToolbar {
     constructor(sudoku_board){
         super()
-        this._board = sudoku_board
+        //this._board = sudoku_board
         for (let i=1; i<=9; ++i){
             this.bindClick(i, ()=>{
                 const selected_dom = sudoku_board.activeDOM
                 const gridbind = selected_dom._object
                 gridbind.grid.assume(i)
                 gridbind.check_connects_valid()
+                if (sudoku_board.completed()){
+                    setTimeout(()=>{alert('Congratulations!')}, 100)
+                }
             })
         }
     }
