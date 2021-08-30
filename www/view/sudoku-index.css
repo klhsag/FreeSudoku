@@ -1,0 +1,23 @@
+
+ul#sudoku-select-list{
+    padding-inline-start: 5%;
+    padding-inline-end: 5%;
+}
+ul#sudoku-select-list li{
+    margin: 5px;
+    padding: 5px;
+    list-style-type: none;
+    text-align: center;
+    font-size: large;
+    border: 1px solid red;
+    border-radius: 10px;
+    background-color: rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(1px);
+}
+ul#sudoku-select-list li:hover{
+    background-color: coral;
+}
+ul#sudoku-select-list li:active{
+    border: red;
+    background-color: red;
+}

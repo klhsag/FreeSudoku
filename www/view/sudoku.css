@@ -63,8 +63,8 @@
     display: flex;
     padding: 0;
     border: 1px solid blue;
-    min-width: 4rem;
-    min-height: 4rem;
+    min-width: 3.6rem;
+    min-height: 3.6rem;
     max-width: min(9vw, 9vh);
     max-height:  min(9vw, 9vh);
     text-align: center;

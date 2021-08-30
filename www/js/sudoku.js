@@ -332,14 +332,12 @@ class SudokuCandidateBar extends SudokuToolbar{
     }
 }
 
-onLoad(()=>{
+const defaultFunc = (data)=>{
     console.log("OnLoad start....")
     const sudoku_game_body = new Sudoku9x9()
-    sudoku_game_body._load_data(sudokumap1)
+    sudoku_game_body._load_data(data)
     const gb = document.getElementById("sudoku-gamebox")
     gb.replaceChildren()
-    sudoku_game_body._gbs[1][1].grid.addCandidate(5)
-    sudoku_game_body._gbs[1][4].grid.assume(8)
     gb.appendChild(sudoku_game_body.dom)
     console.log(sudoku_game_body)
     const candy = new SudokuCandidateBar(sudoku_game_body)
@@ -347,4 +345,12 @@ onLoad(()=>{
     gb.appendChild(candy.dom)
     gb.appendChild(bar.dom)
     console.log(gb)
-});
+}
+
+onLoad(()=>{
+    const filename = localStorage.getItem("sudoku-select-filename")
+    getSudokuMapByFilename(filename).
+        then((data)=>{
+            defaultFunc(data)
+        })
+})
