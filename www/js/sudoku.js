@@ -33,30 +33,28 @@ class CandidateSet{
 }
 
 class SudokuGrid{
-    constructor(num){
+    constructor(num, root=undefined, extra_check=()=>{}){
         this._initial_num = num
         this.dom = bindDiv(this, "", [], [document.createTextNode("")])  // must initial this.dom before this.content
-        this.history = []
+        this.history = new MyHookedHistory(root, undefined, (content)=>{
+            this.refreshDOM(content)
+            extra_check()
+        })
         if (this._initial_num == 0){
             this.content = new SudokuGridContent(EmptyType, new CandidateSet([]))
         } else {
             this.content = SudokuNum(this._initial_num)
         }
+        this.history.fix()
     }
     get content(){
-        let len = this.history.length
-        return this.history[len-1]
+        return this.history.current
     }
     set content(val){
-        this.history.push(val)
-        this.refreshDOM()
+        this.history.current = val
     }
-    rollback(){
-        this.history.pop()
-        this.refreshDOM()
-    }
-    refreshDOM(){
-        this.content.dispatch({
+    refreshDOM(content){
+        content.dispatch({
             [EmptyType] : (val)=>{
                 this.dom.classList.remove("sudoku-placed")
                 this.dom.classList.add("sudoku-candidates-set")
@@ -85,8 +83,10 @@ class SudokuGrid{
     }
     resetCandidates(iterable){
         this.content.dispatch({
-            [EmptyType] : ()=>{
-                this.content = new SudokuGridContent(EmptyType, new CandidateSet(iterable))
+            [EmptyType] : (val)=>{
+                if (val.values().length>0){
+                    this.content = new SudokuGridContent(EmptyType, new CandidateSet(iterable))
+                }
             },
             [AssumeType] : ()=>{
                 this.content = new SudokuGridContent(EmptyType, new CandidateSet(iterable))
@@ -97,8 +97,10 @@ class SudokuGrid{
         this.content.dispatch({
             [EmptyType] : (val)=>{
                 const new_content = new SudokuGridContent(EmptyType, new CandidateSet(val.values()))
-                new_content.val.add(num)
-                this.content = new_content
+                if (!new_content.val.has(num)){
+                    new_content.val.add(num)
+                    this.content = new_content
+                }
             }
         })
     }
@@ -106,8 +108,10 @@ class SudokuGrid{
         this.content.dispatch({
             [EmptyType] : (val)=>{
                 const new_content = new SudokuGridContent(EmptyType, new CandidateSet(val.values()))
-                new_content.val.delete(num)
-                this.content = new_content
+                if (new_content.val.has(num)){
+                    new_content.val.delete(num)
+                    this.content = new_content
+                }
             }
         })
     }
@@ -129,8 +133,10 @@ class SudokuGrid{
             [EmptyType] : ()=>{
                 this.content = new SudokuGridContent(AssumeType, num)
             },
-            [AssumeType] : ()=>{
-                this.content = new SudokuGridContent(AssumeType, num)
+            [AssumeType] : (val)=>{
+                if (num!=val){
+                    this.content = new SudokuGridContent(AssumeType, num)
+                }
             }
         },()=>{
             console.log('unable to assume')
@@ -217,6 +223,7 @@ class GridBind{
 
 class Sudoku9x9{
     constructor(initial_union = new MyUnion(Nothing, Nothing)){
+        this._delegate_history = new MyDelegateHistory()
         initial_union.dispatch({
             [Nothing] : ()=>{
                 this._raw_data = new Array(9).fill(new Array(9).fill(0))
@@ -291,7 +298,9 @@ class Sudoku9x9{
         for (let i=0; i<9; ++i){
             for (let j=0; j<9; ++j){
                 const num = data[i][j]
-                this._gbs[i][j].grid = new SudokuGrid(num)
+                this._gbs[i][j].grid = new SudokuGrid(num, this._delegate_history, ()=>{
+                    this._gbs[i][j].check_connects_valid()
+                })
                 this._gbs[i][j].grid.content.dispatch({
                     [NumType]: ()=>{
                         this._gbs[i][j].dom.firstChild.classList.add("sudoku-hint")
@@ -299,6 +308,7 @@ class Sudoku9x9{
                 })
             }
         }
+        this._delegate_history.fix()
     }
     completed(){
         let flag = true
@@ -311,6 +321,12 @@ class Sudoku9x9{
             }
         }
         return (flag)
+    }
+    undo(){
+        this._delegate_history.undo()
+    }
+    redo(){
+        this._delegate_history.redo()
     }
 
 
@@ -325,7 +341,7 @@ class SudokuPlaceBar extends SudokuToolbar {
                 const selected_dom = sudoku_board.activeDOM
                 const gridbind = selected_dom._object
                 gridbind.grid.assume(i)
-                gridbind.check_connects_valid()
+                //gridbind.check_connects_valid()
                 gridbind.excludeCandidates()
                 if (sudoku_board.completed()){
                     setTimeout(()=>{alert('Congratulations!')}, 100)
@@ -350,16 +366,39 @@ class SudokuCandidateBar extends SudokuToolbar{
 }
 
 function createBtnClear(sudoku_board){
-    const btnClear = document.createElement("button")
-    btnClear.appendChild(document.createTextNode("清除"))
-    btnClear.type = "button"
-    btnClear.addEventListener("click", ()=>{        
+    const btn = document.createElement("button")
+    btn.appendChild(document.createTextNode("清除"))
+    btn.type = "button"
+    btn.classList.add("sudoku-tool-btn")
+    btn.addEventListener("click", ()=>{
         const selected_dom = sudoku_board.activeDOM
         const gridbind = selected_dom._object
         gridbind.grid.resetCandidates([])
-        gridbind.check_connects_valid()
+        //gridbind.check_connects_valid()
     })
-    return btnClear
+    return btn
+}
+
+function createBtnUndo(sudoku_board){
+    const btn = document.createElement("button")
+    btn.appendChild(document.createTextNode("撤销"))
+    btn.type = "button"
+    btn.classList.add("sudoku-tool-btn")
+    btn.addEventListener("click", ()=>{
+        sudoku_board.undo()
+    })
+    return btn
+}
+
+function createBtnRedo(sudoku_board){
+    const btn = document.createElement("button")
+    btn.appendChild(document.createTextNode("恢复"))
+    btn.type = "button"
+    btn.classList.add("sudoku-tool-btn")
+    btn.addEventListener("click", ()=>{
+        sudoku_board.redo()
+    })
+    return btn
 }
 
 const defaultFunc = (data)=>{
@@ -375,7 +414,9 @@ const defaultFunc = (data)=>{
     gb.appendChild(candy.dom)
 
     const btnClear = createBtnClear(sudoku_game_body)
-    const btnGrp = bindDiv(null, "", [], [btnClear])
+    const btnUndo = createBtnUndo(sudoku_game_body)
+    const btnRedo = createBtnRedo(sudoku_game_body)
+    const btnGrp = bindDiv(null, "", [], [btnClear, btnUndo, btnRedo])
     btnGrp.style = "display: inline-block"
     gb.appendChild(btnGrp)
 

@@ -1,3 +1,12 @@
+#sudoku-gamebox>div{
+    vertical-align: middle;
+}
+
+button.sudoku-tool-btn{
+    display: block;
+    padding: 0.75em 1.5em;
+}
+
 .sudoku-place-wrong{
     position: relative;
 }
