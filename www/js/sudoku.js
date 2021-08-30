@@ -58,6 +58,7 @@ class SudokuGrid{
     refreshDOM(){
         this.content.dispatch({
             [EmptyType] : (val)=>{
+                this.dom.classList.remove("sudoku-placed")
                 this.dom.classList.add("sudoku-candidates-set")
                 this.dom.replaceChildren()
                 let vals = val.values()
@@ -85,6 +86,9 @@ class SudokuGrid{
     resetCandidates(iterable){
         this.content.dispatch({
             [EmptyType] : ()=>{
+                this.content = new SudokuGridContent(EmptyType, new CandidateSet(iterable))
+            },
+            [AssumeType] : ()=>{
                 this.content = new SudokuGridContent(EmptyType, new CandidateSet(iterable))
             }
         })
@@ -196,6 +200,18 @@ class GridBind{
     check_connects_valid(){
         this.check_valid()
         for (let other of this.connects) other.check_valid()
+    }
+    excludeCandidates(){
+        if (!this.valid) return
+        if (this.grid.content.is(EmptyType)) return
+        const num = this.grid.content.val
+        for (let other of this.connects){
+            other.grid.content.dispatch({
+                [EmptyType]: ()=>{
+                    other.grid.delCandidate(num)
+                }
+            })
+        }
     }
 }
 
@@ -310,6 +326,7 @@ class SudokuPlaceBar extends SudokuToolbar {
                 const gridbind = selected_dom._object
                 gridbind.grid.assume(i)
                 gridbind.check_connects_valid()
+                gridbind.excludeCandidates()
                 if (sudoku_board.completed()){
                     setTimeout(()=>{alert('Congratulations!')}, 100)
                 }
@@ -332,6 +349,19 @@ class SudokuCandidateBar extends SudokuToolbar{
     }
 }
 
+function createBtnClear(sudoku_board){
+    const btnClear = document.createElement("button")
+    btnClear.appendChild(document.createTextNode("清除"))
+    btnClear.type = "button"
+    btnClear.addEventListener("click", ()=>{        
+        const selected_dom = sudoku_board.activeDOM
+        const gridbind = selected_dom._object
+        gridbind.grid.resetCandidates([])
+        gridbind.check_connects_valid()
+    })
+    return btnClear
+}
+
 const defaultFunc = (data)=>{
     console.log("OnLoad start....")
     const sudoku_game_body = new Sudoku9x9()
@@ -343,6 +373,12 @@ const defaultFunc = (data)=>{
     const candy = new SudokuCandidateBar(sudoku_game_body)
     const bar = new SudokuPlaceBar(sudoku_game_body)
     gb.appendChild(candy.dom)
+
+    const btnClear = createBtnClear(sudoku_game_body)
+    const btnGrp = bindDiv(null, "", [], [btnClear])
+    btnGrp.style = "display: inline-block"
+    gb.appendChild(btnGrp)
+
     gb.appendChild(bar.dom)
     console.log(gb)
 }
