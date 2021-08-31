@@ -1,5 +1,5 @@
 #sudoku-gamebox>div{
-    vertical-align: middle;
+    margin: auto;
 }
 
 button.sudoku-tool-btn{
@@ -143,7 +143,7 @@ button.sudoku-tool-btn{
 }
 
 .sudoku-toolbar{
-    display: inline-grid;
+    display: grid;
     grid-template-columns: repeat(3, 1fr);
     /* place-items: center; */
     place-content: start;

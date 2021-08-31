@@ -411,16 +411,14 @@ const defaultFunc = (data)=>{
     console.log(sudoku_game_body)
     const candy = new SudokuCandidateBar(sudoku_game_body)
     const bar = new SudokuPlaceBar(sudoku_game_body)
-    gb.appendChild(candy.dom)
-
     const btnClear = createBtnClear(sudoku_game_body)
     const btnUndo = createBtnUndo(sudoku_game_body)
     const btnRedo = createBtnRedo(sudoku_game_body)
     const btnGrp = bindDiv(null, "", [], [btnClear, btnUndo, btnRedo])
     btnGrp.style = "display: inline-block"
-    gb.appendChild(btnGrp)
-
-    gb.appendChild(bar.dom)
+    const toolDiv = bindDiv(null, "", [], [candy.dom, btnGrp, bar.dom])
+    toolDiv.style = "display: flex; justify-content: center; align-items: center"
+    gb.appendChild(toolDiv)
     console.log(gb)
 }
 
