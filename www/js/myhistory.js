@@ -40,47 +40,59 @@ class MyValueHistory{
 
 class MyDelegateHistory{
     constructor(){
-        this._tlist = new MyValueHistory(null)
+        this._tlist = new MyValueHistory([null, null])
     }
-    _add(new_object){
-        this._tlist.current = new_object
+    register(to_redo, to_undo){
+        this._tlist.current = [to_redo, to_undo]
     }
-    /*
-    register(new_obj, new_val){
-        new_obj.current = new_val
-        this._add(new_obj)
-    }*/
     redo(){
         if (this._tlist.canForward()){
             this._tlist.redo()
-            this._tlist.current.redo()
+            const [todo, _] = this._tlist.current
+            todo()
         }
     }
     undo(){
-        if (!this._tlist.current) return
-        this._tlist.current.undo()
-        this._tlist.undo()
+        if (this._tlist.canBack()){
+            const [_, todo] = this._tlist.current
+            todo()
+            this._tlist.undo()
+        }
     }
     fix(){
         this._tlist = new MyValueHistory(null)
     }
 }
 
-class MyHookedHistory extends MyValueHistory{
-    constructor(root, first, effect){
-        super(first, effect)
-        this._delegate = root
+class MyComplexHistory{
+    constructor(){
+        this.delegator = new MyDelegateHistory()
     }
-    get current(){
-        return super.current
-    }
-    set current(new_val){
-        if (this._delegate){
-            //this._delegate.register(this, new_val)            
-            super.current = new_val
-            this._delegate._add(this)
-        } else {
-            super.current = new_val
+    delegate(operation_tuples){
+        let redoes = ()=>{}
+        let undoes = ()=>{}
+        for (const [exec, redo, undo] of operation_tuples){
+            exec()
+            const oldredo = redoes
+            redoes = ()=>{
+                oldredo()
+                redo()
+            }
+            const oldundo = undoes
+            undoes = ()=>{
+                oldundo()
+                undo()
+            }
         }
+        this.delegator.register(redoes, undoes)
+    }
+    redo(){
+        this.delegator.redo()
+    }
+    undo(){
+        this.delegator.undo()
+    }
+    fix(){
+        this.delegator = new MyDelegateHistory()
     }
 }
