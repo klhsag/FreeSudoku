@@ -36,11 +36,10 @@ class CandidateSet{
 
 class SudokuGrid{
     constructor(num){
-        this._initial_num = num
-        if (this._initial_num == 0){
+        if (num == 0){
             this.content = new SudokuGridContent(EmptyType, new CandidateSet([]))
         } else {
-            this.content = SudokuNum(this._initial_num)
+            this.content = SudokuNum(num)
         }
     }
     eq(other){
@@ -93,7 +92,7 @@ class SudokuGrid{
             }
         })
     }
-    toggle(num){
+    toggleCandidate(num){
         this.content.dispatch({
             [EmptyType] : (val)=>{
                 const new_content = new SudokuGridContent(EmptyType, new CandidateSet(val.values()))
@@ -116,147 +115,192 @@ class SudokuGrid{
                     this.content = new SudokuGridContent(AssumeType, num)
                 }
             }
-        },()=>{
-            console.log('unable to assume')
+        })
+    }
+    static delegate(grid, callback){
+        const new_grid = grid.copy()
+        callback(new_grid)
+        if (new_grid.eq(grid)) return grid
+        else return new_grid
+    }
+    static reset(grid, ...numbers){
+        return this.delegate(grid, (grid)=>{
+            grid.resetCandidates(numbers)
+        })
+    }
+    static collect(grid, num){
+        return this.delegate(grid, (grid)=>{
+            grid.addCandidate(num)
+        })
+    }
+    static exclude(grid, num){
+        return this.delegate(grid, (grid)=>{
+            grid.delCandidate(num)
+        })
+    }
+    static toggle(grid, num){
+        return this.delegate(grid, (grid)=>{
+            grid.toggleCandidate(num)
+        })
+    }
+    static place(grid, num){
+        return this.delegate(grid, (grid)=>{
+            grid.assume(num)
         })
     }
 }
 
+class MyLeafDOM{
+    constructor(target){
+        this.target = target
+    }
+    replace(new_dom){
+        this.target.replaceWith(new_dom)
+        this.target = new_dom
+    }
+}
+
+
 class SudokuUnit{
-    constructor(grid, class_list, targetDOM = null){
-        this.targetDOM = targetDOM
-        this.dom = bindDivByText(this, `sudoku-grid-wrapper-?`, class_list, "?")
-        this.dom.tabIndex = "0"                    // allow them to be focus
-        this.dom._object = this
-        this.connects = []
-        this.valid = true
-        this.history = new MyValueHistory(undefined)
-        if (grid instanceof SudokuGrid){
-            this.grid = grid
-        } else {
-            throw "invalid construct"
-        }
+    constructor(leaf, grid, refreshAtOnce=true){
+        this.leafNode = leaf
+        this.grid = grid
+        if (refreshAtOnce) this.refreshDOM()
     }
-    get grid(){
-        return this.history.current
-    }
-    set grid(val){
-        this.history.current = val
-        this.refreshDOM()
-    }
-    redo(){
-        this.history.redo()
-        this.refreshDOM()
-    }
-    undo(){
-        this.history.undo()
-        this.refreshDOM()
-    }
-    delegate(callback){
-        const new_grid = this.grid.copy()
-        callback(new_grid)
-        if (this.grid.eq(new_grid)) return false
-        else{
-            this.grid = new_grid
-            return true
-        }
+    eq(other){
+        return (this.leafNode===other.leafNode && this.grid.eq(other.grid))
     }
     refreshDOM(){
+        let grid_dom = undefined
         this.grid.content.dispatch({
             [EmptyType] : (val)=>{
-                const grid_dom = bindDiv(this.grid, "", ["sudoku-candidates-set"], [])
-                let vals = val.values()
-                if (vals.length == 0){
-                    grid_dom.appendChild(document.createTextNode(""))
-                }
-                for (let i of vals){
-                    const candidate_dom = bindDivByText(null, "", [], i)
+                grid_dom = bindDiv(this.grid, "", ["sudoku-candidates-set"], [])
+                for (let i=1; i<=9; ++i){
+                    const candidate_dom = val.has(i)?bindDivByText(null, "", [], i):bindDivByText(null, "", [], "")
                     grid_dom.appendChild(candidate_dom)
                 }
-                this.dom.replaceChildren(grid_dom)
             },
             [NumType] : (val)=>{
-                this.dom.replaceChildren(bindDivByText(this.grid, "", [], val))
+                grid_dom = bindDivByText(this.grid, "", ["sudoku-hint"], val)
             },
             [AssumeType]: (val)=>{
-                this.dom.replaceChildren(bindDivByText(this.grid, "", ["sudoku-placed"], val))
+                grid_dom = bindDivByText(this.grid, "", ["sudoku-placed"], val)
             }
         })
-        this.check_connects_valid()
-        if (this.targetDOM && !this.targetDOM.isEqualNode(this.dom)) this.targetDOM.replaceWith(this.dom)
+        // grid_dom._object = this
+        this.leafNode.replace(grid_dom)
     }
-    connect(other){
-        if (other!==this && !this.connects.includes(other)) this.connects.push(other)
-    }
-    get valid(){
-        return this._valid
-    }
-    set valid(_is_valid){
-        if (_is_valid){
-            this.dom.classList.remove("sudoku-place-wrong")
-        } else {
-            this.dom.classList.add("sudoku-place-wrong")
-        }
-        this._valid = _is_valid
-    }
-    check_valid(){
-        if (this.grid.content.type!=AssumeType) {
-            this.valid = true
-            return;
-        }
-        let __valid = true
+    checkWith(otherUnits){
+        let res = true
+        if (this.grid.content.type!=AssumeType) return res
         const number = this.grid.content.val
-        for (let other of this.connects){
+        for (let other of otherUnits){
             other.grid.content.dispatch({
                 [EmptyType]: ()=>{},
                 [NumType]: (val)=>{
                     if (number==val){
-                        __valid = false;
+                        res = false;
                     }
                 },
                 [AssumeType]: (val)=>{
                     if (number==val){
-                        __valid = false;
+                        res = false;
                     }
                 }
             })
         }
-        this.valid = __valid
+        return res
     }
-    check_connects_valid(){
-        this.check_valid()
-        for (let other of this.connects) other.check_valid()
+    static delegate(unit, grid_op){
+        const new_grid = grid_op(unit.grid)
+        if (new_grid.eq(unit.grid)) return unit
+        else return new SudokuUnit(unit.leafNode, new_grid, true)
     }
-    excludeCandidates(){
-        if (this.grid.content.is(EmptyType)) return []
-        const num = this.grid.content.val
-        const excluded = []
-        for (let other of this.connects){
-            other.grid.content.dispatch({
-                [EmptyType]: ()=>{
-                    const modified = other.delegate((grid)=>{
-                        grid.delCandidate(num)
-                    })
-                    if (modified) excluded.push(other)
-                }
-            })
+
+}
+
+const initial_sudoku_map = new Array(9).fill(null).map(()=>{
+    return new Array(9).fill(0)
+})
+
+const getSudoku9x9Connections = (()=>{
+    const gridbinds = new Array(9).fill(null).map(()=>{
+        return new Array(9).fill(null)
+    })
+    for (let i=0; i<9; ++i) for(let j=0; j<9; ++j) gridbinds[i][j] = []
+    const new_pair = (arr, pair) => {
+        const [a, b] = pair
+        const val = a*10+b
+        if (!arr.includes(val)) arr.push(val)
+    }
+    for (let i=0; i<9; ++i){
+        for (let j=0; j<9; ++j){
+            for (let k=0; k<9; ++k){
+                new_pair(gridbinds[i][j], [i, k])
+                new_pair(gridbinds[i][j], [k, j])
+            }
         }
-        return excluded
+    }
+    for (let i=0; i<9; ++i){
+        let sj = i%3
+        let si = i - sj
+        sj *= 3
+        for (let j=0; j<9; ++j){
+            let xj = j%3
+            let xi = (j - xj)/3
+            xi += si
+            xj += sj
+            for (let k=0; k<9; ++k){
+                let yj = k%3
+                let yi = (k - yj)/3
+                yi += si
+                yj += sj
+                new_pair(gridbinds[xi][xj], [yi, yj])
+                new_pair(gridbinds[yi][yj], [xi, xj])
+            }
+        }
+    }
+    for (let i=0; i<9; ++i) for (let j=0; j<9; ++j){
+        const vals = gridbinds[i][j]
+        const pairs = []
+        for (let val of vals){
+            if (val!=10*i+j) pairs.push([(val-val%10)/10, val%10])
+        }
+        gridbinds[i][j] = pairs
+    }
+    return (x, y) => {return gridbinds[x][y]}
+})()
+
+class SudokuUnit9x9Grp{
+    constructor(initial_units){
+        this._units = new Array(9).fill(null).map(()=>{
+            return new Array(9).fill(null)
+        })
+        for (let i=0; i<9; ++i) for (let j=0; j<9; ++j) this._units[i][j] = initial_units[i][j]
+    }
+    at(x, y){
+        return this._units[x][y]
+    }
+    set(x, y, new_unit){
+        this._units[x][y] = new_unit
+    }
+    eq(other){
+        for (let i=0; i<9; ++i) for (let j=0; j<9; ++j){
+            if (!this._units[i][j].eq(other._units[i][j])) return false
+        }
+        return true
+    }
+    copy(){
+        return new SudokuUnit9x9Grp(this._units)
     }
 }
 
 class Sudoku9x9{
-    constructor(initial_union = new MyUnion(Nothing, Nothing)){
-        this._complex_history = new MyComplexHistory()
-        initial_union.dispatch({
-            [Nothing] : ()=>{
-                this._raw_data = new Array(9).fill(new Array(9).fill(0))
-            }
-        })
-        this._gbs = undefined
+    constructor(raw_data = initial_sudoku_map){
         this.dom = bindDivByText(this, "", ["sudoku-playboard"], "")
+        this._dom_binds = undefined
         this._init_binds()
-        this._load_data(this._raw_data)
+        this._load_data(raw_data)
     }
     _init_binds(){
         let gridbinds = new Array(9).fill(null).map(()=>{
@@ -269,75 +313,94 @@ class Sudoku9x9{
         }
         for (let i=0; i<9; ++i){
             for (let j=0; j<9; ++j){
-                const grid_dom_place = document.createElement("div")
-                boxes[(i-i%3)+(j-j%3)/3].appendChild(grid_dom_place)
-                let _class_list = ["sudoku-grid-wrapper"]
-                if (i==0) _class_list.push("sudoku-grid-at-top")
-                if (i==8) _class_list.push("sudoku-grid-at-bottom")
-                if (j==0) _class_list.push("sudoku-grid-at-left")
-                if (j==8) _class_list.push("sudoku-grid-at-right")
-                gridbinds[i][j] = new SudokuUnit(new SudokuGrid(0), _class_list, grid_dom_place)
-            }
-        }
-        for (let i=0; i<9; ++i){
-            for (let j=0; j<9; ++j){
-                for (let k=0; k<9; ++k){
-                    gridbinds[i][j].connect(gridbinds[i][k])
-                    gridbinds[i][j].connect(gridbinds[k][j])
-                }
-            }
-        }
-        for (let i=0; i<9; ++i){
-            let sj = i%3
-            let si = i - sj
-            sj *= 3
-            for (let j=0; j<9; ++j){
-                let xj = j%3
-                let xi = (j - xj)/3
-                xi += si
-                xj += sj
-                for (let k=0; k<9; ++k){
-                    let yj = k%3
-                    let yi = (k - yj)/3
-                    yi += si
-                    yj += sj
-                    gridbinds[xi][xj].connect(gridbinds[yi][yj])
-                    gridbinds[yi][yj].connect(gridbinds[xi][xj])
-                }
-            }
-        }
-        for (let i=0; i<9; ++i){
-            for (let j=0; j<9; ++j){
-                gridbinds[i][j].dom.addEventListener("focusin", ()=>{
+                const grid_dom = document.createElement("div")
+                boxes[(i-i%3)+(j-j%3)/3].appendChild(grid_dom)
+                grid_dom.classList.add("sudoku-grid-wrapper")
+                if (i==0) grid_dom.classList.add("sudoku-grid-at-top")
+                if (i==8) grid_dom.classList.add("sudoku-grid-at-bottom")
+                if (j==0) grid_dom.classList.add("sudoku-grid-at-left")
+                if (j==8) grid_dom.classList.add("sudoku-grid-at-right")
+                grid_dom.tabIndex = "0"                                      // allow them to be focus
+                grid_dom.addEventListener("focusin", ()=>{
                     if (this.activeDOM){
                         this.activeDOM.classList.remove("sudoku-grid-selected")
                     }
-                    this.activeDOM = gridbinds[i][j].dom
+                    this.activeDOM = grid_dom
                     this.activeDOM.classList.add("sudoku-grid-selected")
+                    this.currentX = i
+                    this.currentY = j
                 })
+                const dom_holder = document.createElement("div")
+                grid_dom.appendChild(dom_holder)
+                gridbinds[i][j] = new MyLeafDOM(dom_holder)
             }
         }
-        this._gbs = gridbinds
+        this._dom_binds = gridbinds
     }
     _load_data(data){
+        const units = new Array(9).fill(null).map(()=>{
+            return new Array(9).fill(null)
+        })
         for (let i=0; i<9; ++i){
             for (let j=0; j<9; ++j){
                 const num = data[i][j]
-                this._gbs[i][j].grid = new SudokuGrid(num)
-                this._gbs[i][j].grid.content.dispatch({
-                    [NumType]: ()=>{
-                        this._gbs[i][j].dom.firstChild.classList.add("sudoku-hint")
-                    }
-                })
+                units[i][j] = new SudokuUnit(this._dom_binds[i][j], new SudokuGrid(num), true)
             }
         }
-        //this._complex_history.fix()
+        this._grp = new MyValueHistory(new SudokuUnit9x9Grp(units))
+    }
+    delegate(callback){
+        const oldUnitGrp = this._grp.current
+        const newUnitGrp = oldUnitGrp.copy()
+        callback(newUnitGrp)
+        if (newUnitGrp.eq(oldUnitGrp)) return
+        for (let i=0; i<9; ++i){
+            for (let j=0; j<9; ++j){
+                const oldUnit = oldUnitGrp.at(i, j)
+                const newUnit = newUnitGrp.at(i, j)
+                if (!newUnit.eq(oldUnit)){
+                    newUnit.refreshDOM()
+                }
+            }
+        }
+        this._grp.current = newUnitGrp
+    }
+    check_conditions(grp, x, y){
+        const cnns = getSudoku9x9Connections(x, y)
+        const otherUnits = []
+        for (let [u, v] of cnns){
+            otherUnits.push(grp.at(u, v))
+        }
+        const valid = grp.at(x, y).checkWith(otherUnits)
+        const node = this._dom_binds[x][y].target.parentNode
+        if (valid){
+            node.classList.remove("sudoku-place-wrong")
+        }else{
+            node.classList.add("sudoku-place-wrong")
+        }
+        for (let [u, v] of cnns){
+            const ncnns = getSudoku9x9Connections(u, v)
+            const other = grp.at(u, v)
+            const anothers = []
+            for (let [i, j] of ncnns){
+                anothers.push(grp.at(i, j))
+            }
+            const valid = other.checkWith(anothers)
+            const node = this._dom_binds[u][v].target.parentNode
+            if (valid){
+                node.classList.remove("sudoku-place-wrong")
+            }else{
+                node.classList.add("sudoku-place-wrong")
+            }
+        }
     }
     completed(){
         let flag = true
         for (let i=0; i<9; ++i){
             for (let j=0; j<9; ++j){
-                if (!this._gbs[i][j].valid || this._gbs[i][j].grid.content.is(EmptyType)){
+                const node = this._dom_binds[i][j].target.parentNode
+                const grp = this._grp.current
+                if (node.classList.contains("sudoku-place-wrong") || grp.at(i, j).grid.content.is(EmptyType)){
                     flag = false
                     break
                 }
@@ -345,43 +408,94 @@ class Sudoku9x9{
         }
         return (flag)
     }
-    undo(){
-        this._complex_history.undo()
-    }
     redo(){
-        this._complex_history.redo()
+        const oldUnitGrp = this._grp.current
+        this._grp.redo()
+        const newUnitGrp = this._grp.current
+        for (let i=0; i<9; ++i){
+            for (let j=0; j<9; ++j){
+                const oldUnit = oldUnitGrp.at(i, j)
+                const newUnit = newUnitGrp.at(i, j)
+                if (!newUnit.eq(oldUnit)){
+                    newUnit.refreshDOM()
+                    this.check_conditions(newUnitGrp, i, j)
+                }
+            }
+        }
     }
-    delegate(grid_unit, grid_callback){
-        const grid_changed = grid_unit.delegate(grid_callback)
-        if (!grid_changed) return
-        let clist = [grid_unit]
-        if (grid_unit.grid.content.is(AssumeType)){
-            clist = [grid_unit, ...grid_unit.excludeCandidates()]
+    undo(){
+        const oldUnitGrp = this._grp.current
+        this._grp.undo()
+        const newUnitGrp = this._grp.current
+        for (let i=0; i<9; ++i){
+            for (let j=0; j<9; ++j){
+                const oldUnit = oldUnitGrp.at(i, j)
+                const newUnit = newUnitGrp.at(i, j)
+                if (!newUnit.eq(oldUnit)){
+                    newUnit.refreshDOM()
+                    this.check_conditions(newUnitGrp, i, j)
+                }
+            }
         }
-        const items = []
-        for (let u of clist){
-            items.push([
-                ()=>{},
-                ()=>{u.redo()},
-                ()=>{u.undo()}
-            ])
-        }
-        this._complex_history.delegate(items)
+    }
+    placeNumber(x, y, num){
+        this.delegate((grp)=>{
+            const tgtUnit = grp.at(x, y)
+            const newUnit = SudokuUnit.delegate(tgtUnit, (grid)=>{
+                return SudokuGrid.place(grid, num)
+            })
+            if (newUnit!==tgtUnit){
+                grp.set(x, y, newUnit)
+                //----------------------- auto exclude
+                const cnns = getSudoku9x9Connections(x, y)
+                for (let [u, v] of cnns){
+                    const otherUnit = grp.at(u, v)
+                    const yieldUnit = SudokuUnit.delegate(otherUnit, (grid)=>{
+                        return SudokuGrid.exclude(grid, num)
+                    })
+                    if (yieldUnit!==otherUnit){
+                        grp.set(u, v, yieldUnit)
+                    }
+                }
+
+                //----------------------- check
+                this.check_conditions(grp, x, y)
+            }
+        })
+    }
+    toggleCandidate(x, y, num){
+        this.delegate((grp)=>{
+            const tgtUnit = grp.at(x, y)
+            const newUnit = SudokuUnit.delegate(tgtUnit, (grid)=>{
+                return SudokuGrid.toggle(grid, num)
+            })
+            if (newUnit!==tgtUnit) grp.set(x, y, newUnit)
+        })
+    }
+    clearUnit(x, y){
+        this.delegate((grp)=>{
+            const tgtUnit = grp.at(x, y)
+            const newUnit = SudokuUnit.delegate(tgtUnit, (grid)=>{
+                return SudokuGrid.reset(grid)
+            })
+            if (newUnit!==tgtUnit){
+                grp.set(x, y, newUnit)
+                this.check_conditions(grp, x, y)
+            }
+        })
     }
 
 }
+
 
 class SudokuPlaceBar extends SudokuToolbar {
     constructor(sudoku_board){
         super()
         for (let i=1; i<=9; ++i){
             this.bindClick(i, ()=>{
-                const selected_dom = sudoku_board.activeDOM
-                const gridbind = selected_dom._object
-                sudoku_board.delegate(gridbind, (grid)=>{
-                    grid.assume(i)
-                })
-                
+                const x = sudoku_board.currentX
+                const y = sudoku_board.currentY
+                sudoku_board.placeNumber(x, y, i)
                 if (sudoku_board.completed()){
                     setTimeout(()=>{alert('Congratulations!')}, 100)
                 }
@@ -393,14 +507,11 @@ class SudokuPlaceBar extends SudokuToolbar {
 class SudokuCandidateBar extends SudokuToolbar{
     constructor(sudoku_board){
         super()
-        this._board = sudoku_board
         for (let i=1; i<=9; ++i){
             this.bindClick(i, ()=>{
-                const selected_dom = sudoku_board.activeDOM
-                const gridbind = selected_dom._object
-                sudoku_board.delegate(gridbind, (grid)=>{
-                    grid.toggle(i)
-                })
+                const x = sudoku_board.currentX
+                const y = sudoku_board.currentY
+                sudoku_board.toggleCandidate(x, y, i)
             })
         }
     }
@@ -412,11 +523,9 @@ function createBtnClear(sudoku_board){
     btn.type = "button"
     btn.classList.add("sudoku-tool-btn")
     btn.addEventListener("click", ()=>{
-        const selected_dom = sudoku_board.activeDOM
-        const gridbind = selected_dom._object        
-        sudoku_board.delegate(gridbind, (grid)=>{
-            grid.resetCandidates([])
-        })
+        const x = sudoku_board.currentX
+        const y = sudoku_board.currentY
+        sudoku_board.clearUnit(x, y)
     })
     return btn
 }
