@@ -48,7 +48,7 @@ class SudokuGrid{
         return (this.content.val==other.content.val)
     }
     copy(){
-        const c = new SudokuGrid(this._initial_num)
+        const c = new SudokuGrid(0)
         this.content.dispatch({
             [EmptyType]: (val)=>{
                 c.content = new SudokuGridContent(EmptyType, new CandidateSet(val.values()))
