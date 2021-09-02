@@ -61,9 +61,7 @@ class SudokuGrid{
     resetCandidates(iterable){
         this.content.dispatch({
             [EmptyType] : (val)=>{
-                if (val.values().length>0){
-                    this.content = new SudokuGridContent(EmptyType, new CandidateSet(iterable))
-                }
+                this.content = new SudokuGridContent(EmptyType, new CandidateSet(iterable))
             },
             [AssumeType] : ()=>{
                 this.content = new SudokuGridContent(EmptyType, new CandidateSet(iterable))
@@ -484,6 +482,34 @@ class Sudoku9x9{
             }
         })
     }
+    autoTips(){
+        this.delegate((grp)=>{
+            for (let i=0; i<9; ++i){
+                for (let j=0; j<9; ++j){
+                    const tgtUnit = grp.at(i, j)
+                    if (!tgtUnit.grid.content.is(EmptyType)) continue
+                    const newUnit = SudokuUnit.delegate(tgtUnit, (/*grid*/)=>{
+                        const cnns = getSudoku9x9Connections(i, j)
+                        let ans = SudokuGrid.reset(new SudokuGrid(0), 1, 2, 3, 4, 5, 6, 7, 8, 9)
+                        console.log(ans.content.val._inner)
+                        for (let [u, v] of cnns){
+                            const other = grp.at(u, v)
+                            const num = other.grid.content.dispatch({
+                                [NumType]: (val)=>val,
+                                [AssumeType]: (val)=>val
+                            })
+                            console.log("?? "+num)
+                            if (num){
+                                ans = SudokuGrid.exclude(ans, num)
+                            }
+                        }
+                        return ans
+                    })
+                    if (newUnit!==tgtUnit) grp.set(i, j, newUnit)
+                }
+            }
+        })
+    }
 
 }
 
@@ -552,6 +578,17 @@ function createBtnRedo(sudoku_board){
     return btn
 }
 
+function createBtnTips(sudoku_board){
+    const btn = document.createElement("button")
+    btn.appendChild(document.createTextNode("提示"))
+    btn.type = "button"
+    btn.classList.add("sudoku-tool-btn")
+    btn.addEventListener("click", ()=>{
+        sudoku_board.autoTips()
+    })
+    return btn
+}
+
 const defaultFunc = (data)=>{
     console.log("OnLoad start....")
     const sudoku_game_body = new Sudoku9x9()
@@ -565,7 +602,8 @@ const defaultFunc = (data)=>{
     const btnClear = createBtnClear(sudoku_game_body)
     const btnUndo = createBtnUndo(sudoku_game_body)
     const btnRedo = createBtnRedo(sudoku_game_body)
-    const btnGrp = bindDiv(null, "", [], [btnClear, btnUndo, btnRedo])
+    const btnTips = createBtnTips(sudoku_game_body)
+    const btnGrp = bindDiv(null, "", [], [btnClear, btnUndo, btnRedo, btnTips])
     btnGrp.style = "display: inline-block"
     const toolDiv = bindDiv(null, "", [], [candy.dom, btnGrp, bar.dom])
     toolDiv.style = "display: flex; justify-content: center; align-items: center"
