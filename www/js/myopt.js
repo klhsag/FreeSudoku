@@ -23,9 +23,9 @@ class MyUnion{
     }
     dispatch(map, $else = ()=>{} ) {
         if (this.type in map){
-            map[this.type](this.val)
+            return map[this.type](this.val)
         } else {
-            $else(this.val)
+            return $else(this.val)
         }
     }
 }
